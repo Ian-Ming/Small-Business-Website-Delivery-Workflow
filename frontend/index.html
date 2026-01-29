@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Small Business Website Intake</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; max-width: 720px; margin: 40px auto; padding: 0 16px; }
+      label { display:block; margin: 14px 0 6px; font-weight: 600; }
+      input, textarea, select { width: 100%; padding: 10px; font-size: 16px; }
+      button { margin-top: 16px; padding: 12px 16px; font-size: 16px; cursor: pointer; }
+      .card { border: 1px solid #ddd; border-radius: 10px; padding: 14px; margin-top: 16px; }
+      .muted { color: #555; }
+      .ok { border-color: #2e7d32; }
+      .err { border-color: #c62828; }
+      pre { white-space: pre-wrap; word-break: break-word; }
+    </style>
+  </head>
+  <body>
+    <h1>Website Project Intake</h1>
+    <p class="muted">Submit your request. You’ll get a confirmation ID and I’ll be notified by email.</p>
+
+    <form id="intakeForm">
+      <label for="name">Your name</label>
+      <input id="name" name="name" required />
+
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" required />
+
+      <label for="businessName">Business name</label>
+      <input id="businessName" name="businessName" required />
+
+      <label for="projectType">Project type</label>
+      <select id="projectType" name="projectType" required>
+        <option value="">Select one…</option>
+        <option>Landing Page</option>
+        <option>Multi-page Website</option>
+        <option>E-commerce</option>
+        <option>Website Fix / Redesign</option>
+        <option>Other</option>
+      </select>
+
+      <label for="goals">Goals / details</label>
+      <textarea id="goals" name="goals" rows="5" required></textarea>
+
+      <button type="submit" id="submitBtn">Submit request</button>
+    </form>
+
+    <div id="result" class="card" style="display:none;"></div>
+
+    <script>
+      const form = document.getElementById("intakeForm");
+      const result = document.getElementById("result");
+      const submitBtn = document.getElementById("submitBtn");
+
+      // Local dev uses Functions host on 7071.
+      // When deployed behind Static Web Apps, "/api/intake" will work the same.
+      const API_URL = "/api/intake";
+
+      function showCard(kind, html) {
+        result.className = "card " + (kind === "ok" ? "ok" : "err");
+        result.style.display = "block";
+        result.innerHTML = html;
+      }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Submitting...";
+
+        const payload = {
+          name: form.name.value.trim(),
+          email: form.email.value.trim(),
+          businessName: form.businessName.value.trim(),
+          projectType: form.projectType.value,
+          goals: form.goals.value.trim(),
+        };
+
+        try {
+          const res = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          const data = await res.json().catch(() => null);
+
+          if (!res.ok) {
+            const msg = data?.error
+              ? `${data.error}${data.missing ? " — missing: " + data.missing.join(", ") : ""}`
+              : "Request failed.";
+            showCard("err", `<h3>Submission failed</h3><p>${msg}</p><pre>${JSON.stringify(data, null, 2)}</pre>`);
+            return;
+          }
+
+          showCard(
+            "ok",
+            `<h3>Submitted ✅</h3>
+             <p><strong>Request ID:</strong> ${data.requestId}</p>
+             <p><strong>Stored:</strong> ${data.stored}</p>
+             <p><strong>Email sent:</strong> ${data.notified}</p>
+             <p class="muted">Keep your Request ID for reference.</p>`
+          );
+
+          form.reset();
+        } catch (err) {
+          showCard("err", `<h3>Submission failed</h3><p>${err}</p>`);
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Submit request";
+        }
+      });
+    </script>
+  </body>
+</html>
