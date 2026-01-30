@@ -5,6 +5,8 @@ import datetime
 import uuid
 import os
 import requests
+table.create_entity(entity=entity)
+
 
 from azure.data.tables import TableServiceClient
 
@@ -40,12 +42,12 @@ def intake(req: func.HttpRequest) -> func.HttpResponse:
     created_at = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
 
     # 4) Store in Azure Table Storage (store-first workflow)
-    conn_str = os.environ.get("AzureWebJobsStorage")
+    conn_str = os.environ.get("INTAKE_STORAGE_CONNECTION_STRING")
     table_name = os.environ.get("TABLE_NAME", "intakeRequests")
 
     if not conn_str:
         return func.HttpResponse(
-            json.dumps({"ok": False, "error": "MISSING_STORAGE", "message": "AzureWebJobsStorage not set."}),
+            json.dumps({"ok": False, "error": "MISSING_STORAGE", "message": "INTAKE_STORAGE_CONNECTION_STRING not set."}),
             status_code=500,
             mimetype="application/json",
         )
@@ -67,23 +69,7 @@ def intake(req: func.HttpRequest) -> func.HttpResponse:
 
     table.create_entity(entity=entity)
 
-    # 5) Notify via Logic App (only after storage succeeds)
-    logic_app_url = os.environ.get("LOGIC_APP_URL")
-    notified = False
-
-    if logic_app_url:
-        try:
-            payload = {
-                **data,
-                "requestId": request_id,
-                "createdAt": created_at,
-            }
-            resp = requests.post(logic_app_url, json=payload, timeout=10)
-            notified = 200 <= resp.status_code < 300
-        except Exception as e:
-            logging.warning(f"Logic App notification failed: {e}")
-
-    # 6) Return success
+    # 5) Return success
     return func.HttpResponse(
         json.dumps(
             {
@@ -91,8 +77,7 @@ def intake(req: func.HttpRequest) -> func.HttpResponse:
                 "requestId": request_id,
                 "createdAt": created_at,
                 "stored": True,
-                "notified": notified,
-                "message": "Request stored. Notification attempted.",
+                "message": "Request stored. Next step is notification.",
             }
         ),
         status_code=200,
