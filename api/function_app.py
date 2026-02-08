@@ -69,6 +69,28 @@ def intake(req: func.HttpRequest) -> func.HttpResponse:
 
     table.create_entity(entity=entity)
 
+    # --- Trello Integration ---
+    trello_key = os.environ.get("TRELLO_KEY")
+    trello_token = os.environ.get("TRELLO_TOKEN")
+    trello_list_id = os.environ.get("TRELLO_LIST_ID")
+
+    if trello_key and trello_token and trello_list_id:
+        try:
+            trello_url = "https://api.trello.com/1/cards"
+            card_data = {
+                'key': trello_key,
+                'token': trello_token,
+                'idList': trello_list_id,
+                'name': f"New Lead: {data['name']} | {data['projectType']}",
+                'desc': f"Business: {data['businessName']}\nEmail: {data['email']}\nGoals: {data['goals']}\nRequest ID: {request_id}",
+                'pos': 'top' # Puts new leads at the top of the list
+            }
+            requests.post(trello_url, params=card_data)
+            logging.info(f"Trello card created for {request_id}")
+        except Exception as e:
+            logging.error(f"Failed to create Trello card: {str(e)}")
+    # --------------------------
+
     # 5) Return success
     return func.HttpResponse(
         json.dumps(
