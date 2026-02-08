@@ -1,3 +1,4 @@
+# Engine01 v1.0.1
 import azure.functions as func
 import json
 import logging
@@ -5,7 +6,6 @@ import datetime
 import uuid
 import os
 import requests
-table.create_entity(entity=entity)
 
 
 from azure.data.tables import TableServiceClient
