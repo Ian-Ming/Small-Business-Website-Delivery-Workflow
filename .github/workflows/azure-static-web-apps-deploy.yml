@@ -27,7 +27,6 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
           action: "upload"
           skip_app_build: true
-          output_location: "/"
           ###### Engine01 Directory Locations ######
           app_location: "src"           # Your HTML/Web Components
           api_location: "api"           # Your Python functions
