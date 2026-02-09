@@ -1,18 +1,7 @@
 {
-  "routes": [
-    {
-      "route": "/api/intake",
-      "methods": ["POST", "OPTIONS"],
-      "headers": {
-        "Access-Control-Allow-Origin": "https://ianmingcloud.com",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
-      }
-    }
-  ],
   "globalHeaders": {
     "Access-Control-Allow-Origin": "https://ianmingcloud.com",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type"
+    "Access-Control-Allow-Headers": "Content-Type, Authorization"
   }
 }
