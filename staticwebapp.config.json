@@ -1,7 +1,28 @@
 {
+  "trailingSlash": "auto",
+  "platform": {
+    "apiLanguage": "python",
+    "apiVersion": "3.11"
+  },
+  "routes": [
+    {
+      "route": "/api/*",
+      "methods": ["POST", "OPTIONS"],
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Max-Age": "86400"
+      }
+    }
+  ],
+  "responseOverrides": {
+    "401": {
+      "redirect": "https://ianmingcloud.com",
+      "statusCode": 302
+    }
+  },
   "globalHeaders": {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    "Access-Control-Allow-Origin": "*"
   }
 }
