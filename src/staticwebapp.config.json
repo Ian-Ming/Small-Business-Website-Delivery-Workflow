@@ -1,5 +1,17 @@
 {
-  "navigationFallback": {
-    "rewrite": "/index.html"
+  "routes": [
+    {
+      "route": "/blocks/*",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Cache-Control": "no-cache"
+      }
+    }
+  ],
+  "globalHeaders": {
+    "Access-Control-Allow-Origin": "https://ianmingcloud.com",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization"
   }
 }
