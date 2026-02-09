@@ -12,9 +12,21 @@ from azure.data.tables import TableServiceClient
 
 app = func.FunctionApp()
 
-@app.route(route="intake", auth_level=func.AuthLevel.ANONYMOUS, methods=["POST"])
+# Add OPTIONS to the allowed methods
+@app.route(route="intake", auth_level=func.AuthLevel.ANONYMOUS, methods=["POST", "OPTIONS"])
 def intake(req: func.HttpRequest) -> func.HttpResponse:
-    logging.info("Intake request received.")
+    # 1. Handle the "Preflight" check immediately
+    if req.method == "OPTIONS":
+        return func.HttpResponse(
+            status_code=204,
+            headers={
+                "Access-Control-Allow-Origin": "https://ianmingcloud.com",
+                "Access-Control-Allow-Methods": "POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type",
+            }
+        )
+    
+    # ... rest of your existing code ...
 
     # 1) Parse JSON body
     try:
