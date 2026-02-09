@@ -82,13 +82,18 @@ def intake(req: func.HttpRequest) -> func.HttpResponse:
                 'token': trello_token,
                 'idList': trello_list_id,
                 'name': f"New Lead: {data['name']} | {data['projectType']}",
-                'desc': f"Business: {data['businessName']}\nEmail: {data['email']}\nGoals: {data['goals']}\nRequest ID: {request_id}",
-                'pos': 'top' # Puts new leads at the top of the list
+                'desc': (
+                f"--- SOURCE: Portfolio Site ---\n"
+                f"Business: {data['businessName']}\n"
+                f"Email: {data['email']}\n"
+                f"Goals: {data['goals']}\n"
+                f"Request ID: {request_id}"),
             }
             requests.post(trello_url, params=card_data)
             logging.info(f"Trello card created for {request_id}")
         except Exception as e:
             logging.error(f"Failed to create Trello card: {str(e)}")
+
     # --------------------------
 
     # 5) Return success
