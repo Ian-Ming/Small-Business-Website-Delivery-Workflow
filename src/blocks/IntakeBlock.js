@@ -60,7 +60,7 @@ class IntakeBlock extends HTMLElement {
         const form = this.shadowRoot.getElementById("intakeForm");
         const result = this.shadowRoot.getElementById("result");
         const submitBtn = this.shadowRoot.getElementById("submitBtn");
-        const API_URL = "/api/intake";
+        const API_URL = "https://thankful-island-05b80d10f.6.azurestaticapps.net/api/intake";
 
         const showCard = (kind, html) => {
             result.className = "card " + (kind === "ok" ? "ok" : "err");
