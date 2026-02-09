@@ -1,8 +1,5 @@
 {
-  "globalHeaders": {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization, x-ms-request-id",
-    "Access-Control-Expose-Headers": "Access-Control-Allow-Origin"
+  "navigationFallback": {
+    "rewrite": "/index.html"
   }
 }
