@@ -1,15 +1,8 @@
 {
   "routes": [
     {
-      "route": "/blocks/*.js",
-      "headers": {
-        "Access-Control-Allow-Origin": "https://ianmingcloud.com",
-        "Access-Control-Allow-Methods": "GET, OPTIONS",
-        "cache-control": "must-revalidate, max-age=3600"
-      }
-    },
-    {
       "route": "/api/*",
+      "methods": ["POST", "OPTIONS"],
       "headers": {
         "Access-Control-Allow-Origin": "https://ianmingcloud.com",
         "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -18,6 +11,8 @@
     }
   ],
   "globalHeaders": {
-    "Access-Control-Allow-Origin": "https://ianmingcloud.com"
+    "Access-Control-Allow-Origin": "https://ianmingcloud.com",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type"
   }
 }
