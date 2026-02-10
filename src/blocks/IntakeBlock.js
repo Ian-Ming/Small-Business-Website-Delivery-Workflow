@@ -60,8 +60,7 @@ class IntakeBlock extends HTMLElement {
         const form = this.shadowRoot.getElementById("intakeForm");
         const result = this.shadowRoot.getElementById("result");
         const submitBtn = this.shadowRoot.getElementById("submitBtn");
-        const API_URL = "https://thankful-island-05b80d10f.6.azurestaticapps.net/api/intake";
-
+        const API_URL = "https://engine01-hub.azurewebsites.net/api/intake";
         const showCard = (kind, html) => {
             result.className = "card " + (kind === "ok" ? "ok" : "err");
             result.style.display = "block";
@@ -76,10 +75,13 @@ class IntakeBlock extends HTMLElement {
             const payload = {
                 name: form.name.value.trim(),
                 email: form.email.value.trim(),
-                businessName: form.businessName.value.trim(),
-                projectType: form.projectType.value,
-                goals: form.goals.value.trim(),
-            };
+                // We combine the extra fields into "message" so your Python code captures them
+                message: `
+                Business: ${form.businessName.value.trim()}
+                Type: ${form.projectType.value}
+                Goals: ${form.goals.value.trim()}
+                `.trim()
+                };
 
             try {
                 const res = await fetch(API_URL, {
