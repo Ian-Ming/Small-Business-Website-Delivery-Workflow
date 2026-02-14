@@ -6,25 +6,50 @@ class AuthControlBlock extends HTMLElement {
     }
 
     async connectedCallback() {
-        const res = await fetch("/.auth/me");
-        const data = await res.json();
-        this.user = data.clientPrincipal;
-        this.render();
+        try {
+            const res = await fetch("/.auth/me");
+            const data = await res.json();
+            // Azure returns an array of client principals
+            if (data.clientPrincipal) {
+                this.user = data.clientPrincipal;
+            }
+            this.render();
+        } catch (err) {
+            console.log("Auth: No active session found.");
+            this.render();
+        }
     }
 
     render() {
-        if (!this.user) {
-            this.shadowRoot.innerHTML = `
-                <a href="/.auth/login/google" style="color:white; text-decoration:none; font-weight:600;">Client Login</a>
-            `;
-        } else {
-            this.shadowRoot.innerHTML = `
-                <div style="color:white; font-size: 0.9rem;">
-                    Welcome, <strong>${this.user.userDetails}</strong> | 
-                    <a href="/.auth/logout" style="color:#ff4d4d; margin-left:10px;">Logout</a>
-                </div>
-            `;
-        }
+        this.shadowRoot.innerHTML = `
+        <style>
+            :host { display: inline-block; font-family: system-ui, sans-serif; }
+            .auth-wrapper { display: flex; align-items: center; gap: 12px; font-size: 0.85rem; }
+            .user-info { color: #555; font-weight: 500; }
+            .auth-link { 
+                text-decoration: none; 
+                padding: 6px 12px; 
+                border-radius: 6px; 
+                font-weight: 600; 
+                transition: 0.2s;
+            }
+            .login { color: #0078d4; border: 1px solid #0078d4; }
+            .login:hover { background: #0078d4; color: white; }
+            .logout { color: #dc2626; }
+            .logout:hover { text-decoration: underline; }
+        </style>
+        <div class="auth-wrapper">
+            ${this.user ? `
+                <span class="user-info">Logged in as: <strong>${this.user.userDetails}</strong></span>
+                <a href="/.auth/logout" class="auth-link logout">Sign Out</a>
+            ` : `
+                <a href="/.auth/login/google" class="auth-link login">Client Login</a>
+            `}
+        </div>
+        `;
     }
 }
-customElements.define('auth-control-block', AuthControlBlock);
+
+if (!customElements.get('auth-control-block')) {
+    customElements.define('auth-control-block', AuthControlBlock);
+}
