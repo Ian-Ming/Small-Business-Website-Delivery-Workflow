@@ -21,13 +21,13 @@
       }
     },
     {
-      "route": "/admin*",
+      "route": "/admin.html",
       "allowedRoles": ["authenticated"]
     }
   ],
   "responseOverrides": {
     "401": {
-      "redirect": "/.auth/login/google",
+      "redirect": "/.auth/login/google?post_login_redirect_uri=/admin.html",
       "statusCode": 302
     }
   },

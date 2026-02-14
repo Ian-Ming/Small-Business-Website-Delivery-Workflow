@@ -43,7 +43,7 @@ class AuthControlBlock extends HTMLElement {
                 <span class="user-info">Logged in as: <strong>${this.user.userDetails}</strong></span>
                 <a href="/.auth/logout" class="auth-link logout">Sign Out</a>
             ` : `
-                <a href="/.auth/login/google?post_login_redirect_uri=/dashboard.html" class="auth-link login">Client Login</a>
+                <a href="/.auth/login/google?post_login_redirect_uri=/admin.html" class="auth-link login">Client Login</a>
             `}
         </div>
         `;
