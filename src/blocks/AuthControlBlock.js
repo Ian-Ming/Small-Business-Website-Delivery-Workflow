@@ -37,13 +37,15 @@ class AuthControlBlock extends HTMLElement {
             .login:hover { background: #0078d4; color: white; }
             .logout { color: #dc2626; }
             .logout:hover { text-decoration: underline; }
+            .admin-btn { background: #111; color: white; margin-right: 10px; }
         </style>
         <div class="auth-wrapper">
             ${this.user ? `
-                <span class="user-info">Logged in as: <strong>${this.user.userDetails}</strong></span>
-                <a href="/.auth/logout" class="auth-link logout">Sign Out</a>
-            ` : `
-                <a href="/.auth/login/google?post_login_redirect_uri=/admin.html" class="auth-link login">Client Login</a>
+            <a href="/admin.html" class="auth-link admin-btn">Manage Website</a>
+            <span class="user-info">Hi, <strong>${this.user.userDetails}</strong></span>
+            <a href="/.auth/logout?post_logout_redirect_uri=/" class="auth-link logout">Sign Out</a>
+        ` : `
+            <a href="/.auth/login/google?post_login_redirect_uri=/admin.html" class="auth-link login">Client Login</a>
             `}
         </div>
         `;
