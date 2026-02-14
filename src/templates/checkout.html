@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Checkout | Engine01</title>
+    <style>
+        body { font-family: sans-serif; background: #fafafa; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .cart-item { 
+            display: flex; justify-content: space-between; align-items: center;
+            background: white; padding: 15px; margin-bottom: 10px; 
+            border-radius: 8px; border: 1px solid #eee;
+        }
+        .total-box { 
+            text-align: right; padding: 20px; font-size: 1.5rem; font-weight: bold; 
+        }
+        .pay-btn { 
+            display: block; width: 100%; padding: 20px; background: #000; 
+            color: #fff; border: none; border-radius: 8px; font-size: 1.2rem; cursor: pointer;
+        }
+        .empty-msg { text-align: center; padding: 50px; color: #999; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Your Shopping Bag</h1>
+        <div id="cart-list"></div>
+        <div id="checkout-footer" style="display:none;">
+            <div class="total-box">Total: $<span id="cart-total">0</span>
+            </div>
+            <payment-block></payment-block> 
+        </div>
+            <script src="../blocks/PaymentBlock.js" defer></script>
+    </div>
+
+    <script>
+        function loadCart() {
+            const cart = JSON.parse(localStorage.getItem('engine01_cart')) || [];
+            const list = document.getElementById('cart-list');
+            const footer = document.getElementById('checkout-footer');
+            
+            if (cart.length === 0) {
+                list.innerHTML = '<div class="empty-msg">Your bag is empty. <br><a href="index.html">Go back to shop</a></div>';
+                footer.style.display = 'none';
+                return;
+            }
+
+            footer.style.display = 'block';
+            let total = 0;
+            list.innerHTML = cart.map((item, index) => {
+                total += parseFloat(item.price);
+                return `
+                    <div class="cart-item">
+                        <div>
+                            <strong>${item.name}</strong><br>
+                            <small style="color:#888;">ID: ${item.id}</small>
+                        </div>
+                        <div>
+                            $${item.price}
+                            <button onclick="removeItem(${index})" style="margin-left:15px; color:red; cursor:pointer; border:none; background:none;">✕</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('cart-total').innerText = total.toFixed(2);
+        }
+
+        window.removeItem = (index) => {
+            let cart = JSON.parse(localStorage.getItem('engine01_cart')) || [];
+            cart.splice(index, 1);
+            localStorage.setItem('engine01_cart', JSON.stringify(cart));
+            loadCart();
+        };
+
+        loadCart();
+    </script>
+</body>
+</html>

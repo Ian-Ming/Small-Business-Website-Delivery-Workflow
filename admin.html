@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Engine01 | Client Command Center</title>
+    <style>
+        body { background: #f4f4f4; padding: 40px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    </style>
+    <script src="src/blocks/DashboardBlock.js" defer></script>
+    <script src="src/blocks/ProductManagerBlock.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Engine01 Command Center</h1>
+            <p>Managing: <strong>Classic Cuts Barber Shop</strong></p>
+        </div>
+        
+        <Dashboard-block></Dashboard-block>
+        <product-manager-block></product-manager-block>
+    </div>
+</body>
+</html>
