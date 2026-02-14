@@ -18,13 +18,22 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: true
-      - name: List files for debugging
+
+      # Step 1: Initialize Python environment so the runner is ready
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      # Step 2: Verification (This prints your files in the log so we can see the path)
+      - name: Path Check
         run: |
-          echo "Checking Root:"
-          ls -R
-          echo "Checking for requirements.txt in api folder:"
-          ls api/requirements.txt || echo "FILE NOT FOUND IN api/"
-      
+          echo "Listing files in root:"
+          ls -F
+          echo "Listing files in api folder:"
+          ls -F api/
+
+      # Step 3: The actual deployment
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -33,15 +42,14 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           
-          ###### Engine01 Directory Locations ######
-          app_location: "src"           # Where your index.html and ProductBlock.js live
-          api_location: "api"           # Where function_app.py and requirements.txt live
-          output_location: "src"        # For Vanilla JS, this should point to your web root
-          ##########################################
+          ###### DIRECTORY MAPPING ######
+          app_location: "src"           # Folder with your index.html
+          api_location: "api"           # Folder with function_app.py & requirements.txt
+          output_location: "src"        # The 'finished' site is just the src folder
+          ###############################
           
-          # This helps avoid unnecessary build steps for simple JS
-          skip_app_build: true
-          ##########################################
+          skip_app_build: true          # Since we are using Vanilla JS
+          skip_api_build: false         # Force Azure to build the Python engine
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
