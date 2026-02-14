@@ -1,18 +1,37 @@
 {
   "trailingSlash": "auto",
+  "navigationFallback": {
+    "rewrite": "/index.html"
+  },
   "routes": [
     {
       "route": "/api/intake",
-      "methods": ["POST", "OPTIONS"],
+      "methods": ["POST", "OPTIONS", "GET", "PATCH", "DELETE"],
       "headers": {
-        "Access-Control-Allow-Origin": "https://ianmingcloud.com",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        "Access-Control-Max-Age": "86400"
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS, DELETE",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization"
       }
+    },
+    {
+      "route": "/api/products",
+      "methods": ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+      "headers": {
+        "Access-Control-Allow-Origin": "*"
+      }
+    },
+    {
+      "route": "/admin.html",
+      "allowedRoles": ["authenticated"]
     }
   ],
+  "responseOverrides": {
+    "401": {
+      "redirect": "/.auth/login/google?post_login_redirect_uri=/admin.html",
+      "statusCode": 302
+    }
+  },
   "globalHeaders": {
-    "Access-Control-Allow-Origin": "https://ianmingcloud.com"
+    "Access-Control-Allow-Origin": "*"
   }
 }
