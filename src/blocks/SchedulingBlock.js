@@ -3,6 +3,9 @@ class SchedulingBlock extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
         this.selectedTime = null;
+        // Logic: Get from attribute or default
+        this.clientId = this.getAttribute('client-id') || "BarberShop01"; 
+        this.apiUrl = "https://engine01-hub.azurewebsites.net/api/bookings";
     }
 
     connectedCallback() {
@@ -10,122 +13,162 @@ class SchedulingBlock extends HTMLElement {
         this.render();
     }
 
+    get headers() {
+        return {
+            'Content-Type': 'application/json',
+            'x-engine01-client-id': this.clientId
+        };
+    }
+
     render() {
         this.shadowRoot.innerHTML = `
         <style>
-            :host { display: block; }
-            .booking-container { background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 8px; font-family: sans-serif; }
+            :host { display: block; font-family: 'Segoe UI', system-ui, sans-serif; }
+            .booking-container { background: #fff; padding: 24px; border: 1px solid #eee; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+            h3 { margin-top: 0; color: #111; }
             .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; min-height: 50px; }
-            .time-slot { padding: 10px; border: 1px solid #ccc; text-align: center; cursor: pointer; border-radius: 4px; transition: 0.2s; }
+            .time-slot { padding: 12px; border: 1px solid #e0e0e0; text-align: center; cursor: pointer; border-radius: 8px; transition: 0.2s; font-size: 0.85rem; font-weight: 500; }
             .time-slot:hover { border-color: #0078d4; background: #f0f7ff; }
             .time-slot.selected { background: #0078d4; color: white; border-color: #0078d4; }
-            select, input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-            button { width: 100%; padding: 12px; background: #0078d4; color: white; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; }
-            .instruction { font-size: 0.9rem; color: #666; margin-bottom: 5px; }
+            .time-slot.occupied { background: #f5f5f5; color: #ccc; cursor: not-allowed; border: none; }
+            label { display: block; font-size: 0.8rem; font-weight: 600; color: #666; margin-bottom: 6px; margin-top: 15px; }
+            input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+            button#submit-booking { width: 100%; padding: 14px; background: #000; color: white; border: none; cursor: pointer; font-weight: bold; border-radius: 8px; margin-top: 20px; transition: 0.3s; }
+            button#submit-booking:hover { background: #333; }
         </style>
         <div class="booking-container">
-            <h3>Book an Appointment</h3>
-            <input type="text" id="cust-name" placeholder="Your Name">
+            <h3>Schedule Visit</h3>
+            <label>Name</label>
+            <input type="text" id="cust-name" placeholder="Who are we cutting?">
             
-            <label class="instruction">Select Service:</label>
+            <label>Service</label>
             <select id="cust-service">
                 <option value="Standard Haircut">Standard Haircut - $30</option>
                 <option value="Beard Trim">Beard Trim - $20</option>
-                <option value="The Works">The Works (Hair + Beard) - $45</option>
+                <option value="The Works">The Works - $45</option>
             </select>
 
-            <label class="instruction">Choose Date:</label>
-            <input type="date" id="book-date">
+            <label>Date</label>
+            <input type="date" id="book-date" min="${new_date_iso()}">
             
+            <label>Available Times</label>
             <div class="time-grid" id="time-grid">
-                <p style="grid-column: span 3; color: #999; font-size: 0.8rem;">Select a date to see available times...</p>
+                <p style="grid-column: span 3; color: #999; font-size: 0.8rem;">Pick a date first...</p>
             </div>
-            <button id="submit-booking">Confirm Booking</button>
+            <button id="submit-booking">Confirm Appointment</button>
         </div>
         `;
+        
+        function new_date_iso() { return new Date().toISOString().split('T')[0]; }
         this.setupEventListeners();
     }
 
     setupEventListeners() {
-        const datainput = this.shadowRoot.getElementById('book-date');
-
-        datainput.addEventListener('change', async (e) => {
+        const dateInput = this.shadowRoot.getElementById('book-date');
+        dateInput.addEventListener('change', async (e) => {
             const selectedDate = e.target.value;
+            const grid = this.shadowRoot.getElementById('time-grid');
+            grid.innerHTML = '<p style="grid-column: span 3; color: #999;">Checking calendar...</p>';
+            
             try {
-                const response = await fetch(`https://engine01-hub.azurewebsites.net/api/bookings?date=${selectedDate}`);
-                const occupiedSlots = await response.json(); 
+                const response = await fetch(`${this.apiUrl}?date=${selectedDate}`, {
+                    headers: this.headers
+                });
+
+                // BULLETPROOF: Handle the 404 or Empty state gracefully
+                let occupiedSlots = [];
+                if (response.ok) {
+                    occupiedSlots = await response.json();
+                }
                 
-                // FIXED NAME: Matches the function below
                 this.renderAvailableSlots(occupiedSlots);
             } catch (err) {
                 console.error("Fetch error:", err);
+                this.renderAvailableSlots([]); // Fallback to all open
             }
         });
 
         this.shadowRoot.getElementById('submit-booking').addEventListener('click', () => this.handleBooking());
     }
 
-    // THIS IS NOW INSIDE THE CLASS
     renderAvailableSlots(occupied) {
         const allPossibleTimes = ["09:00 AM", "10:00 AM", "11:00 AM", "01:00 PM", "02:00 PM", "03:00 PM"];
         const grid = this.shadowRoot.getElementById('time-grid');
-        
-        grid.innerHTML = ''; // Clear the "Select a date" message
+        grid.innerHTML = ''; 
 
         allPossibleTimes.forEach(time => {
-            if (!occupied.includes(time)) {
-                const slot = document.createElement('div');
-                slot.className = 'time-slot';
-                slot.innerText = time;
-                
+            const slot = document.createElement('div');
+            const isOccupied = occupied.includes(time);
+            slot.className = isOccupied ? 'time-slot occupied' : 'time-slot';
+            slot.innerText = time;
+            
+            if (!isOccupied) {
                 slot.addEventListener('click', () => {
                     this.shadowRoot.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
                     slot.classList.add('selected');
                     this.selectedTime = time;
                 });
-                
-                grid.appendChild(slot);
+            } else {
+                slot.title = "Already booked";
             }
+            grid.appendChild(slot);
         });
-
-        if (grid.innerHTML === '') {
-            grid.innerHTML = '<p style="grid-column: span 3; color: red;">Fully Booked!</p>';
-        }
     }
 
     async handleBooking() {
+        const btn = this.shadowRoot.getElementById('submit-booking');
         const name = this.shadowRoot.getElementById('cust-name').value;
         const date = this.shadowRoot.getElementById('book-date').value;
         const service = this.shadowRoot.getElementById('cust-service').value;
 
         if (!name || !date || !this.selectedTime) {
-            alert("Please complete all fields and select a time.");
+            alert("Please fill in your name, date, and pick a time slot!");
             return;
         }
+
+        btn.disabled = true;
+        btn.innerText = "Processing...";
 
         const bookingData = { name, date, time: this.selectedTime, service };
 
         try {
-            const res = await fetch('https://engine01-hub.azurewebsites.net/api/bookings', {
+            const res = await fetch(this.apiUrl, {
                 method: 'POST',
                 body: JSON.stringify(bookingData),
-                headers: { 'Content-Type': 'application/json' }
+                headers: this.headers
             });
 
             if (res.ok) {
+                // SUCCESS: Log it as an Intake lead too so it hits the Dashboard!
+                await fetch("https://engine01-hub.azurewebsites.net/api/intake", {
+                    method: 'POST',
+                    headers: this.headers,
+                    body: JSON.stringify({
+                        name: name,
+                        message: `BOOKING: ${service} on ${date} @ ${this.selectedTime}`
+                    })
+                });
+
                 this.shadowRoot.innerHTML = `
-                    <div style="text-align:center; padding: 20px;">
-                        <h3 style="color: green;">✓ Booking Confirmed!</h3>
-                        <p>See you on <strong>${date}</strong> at <strong>${this.selectedTime}</strong>.</p>
-                        <button onclick="location.reload()">Book Another</button>
+                    <div style="text-align:center; padding: 40px 20px;">
+                        <h1 style="font-size: 3rem;">✂️</h1>
+                        <h3 style="color: #000;">Confirmed!</h3>
+                        <p style="color: #666;">See you ${name} on <strong>${date}</strong> at <strong>${this.selectedTime}</strong>.</p>
+                        <button onclick="location.reload()" style="background:#eee; border:none; padding:10px; border-radius:8px; cursor:pointer;">Back</button>
                     </div>`;
             } else if (res.status === 409) {
-                alert("That slot was just taken! Please pick another.");
+                alert("Someone just beat you to that slot! Please pick another time.");
+                btn.disabled = false;
+                btn.innerText = "Confirm Appointment";
             }
         } catch (err) {
             console.error(err);
+            alert("Connection error. Please try again.");
+            btn.disabled = false;
         }
     }
-} // <--- THE CLASS ENDS HERE NOW
+}
 
-customElements.define('scheduling-block', SchedulingBlock);
+if (!customElements.get('scheduling-block')) {
+    customElements.define('scheduling-block', SchedulingBlock);
+}

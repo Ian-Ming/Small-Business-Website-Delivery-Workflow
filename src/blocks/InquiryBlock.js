@@ -51,32 +51,37 @@ class InquiryBlock extends HTMLElement {
     }
 
     async handleSubmit(e) {
-        e.preventDefault();
-        const btn = this.shadowRoot.querySelector('button');
-        btn.innerText = "Sending...";
-        btn.disabled = true;
+    e.preventDefault();
+    // 1. Point to the NEW unified intake URL
+    const INTAKE_API = "https://engine01-hub.azurewebsites.net/api/intake";
+    
+    const fd = new FormData(e.target);
+    const data = {
+        name: fd.get('name'),
+        email: fd.get('email'),
+        message: fd.get('message')
+    };
 
-        const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData.entries());
+    try {
+        const res = await fetch(INTAKE_API, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // 2. Add the mandatory ID badge
+                'x-engine01-client-id': this.getAttribute('client-id') || "BarberShop01"
+            },
+            body: JSON.stringify(data)
+        });
 
-        try {
-            // We will create this 'customer-inquiry' route in Azure next
-            const res = await fetch('https://engine01-hub.azurewebsites.net/api/customer-inquiry', {
-                method: 'POST',
-                body: JSON.stringify(data),
-                headers: { 'Content-Type': 'application/json' }
-            });
-
-            if (res.ok) {
-                this.shadowRoot.innerHTML = `<h3>Message Sent!</h3><p>The shop will get back to you soon.</p>`;
-            } else {
-                throw new Error("Failed to send");
-            }
-        } catch (err) {
-            alert("Error sending message. Please try again.");
-            btn.innerText = "Submit Message";
-            btn.disabled = false;
+        if (res.ok) {
+            alert("Message Sent!");
+            e.target.reset();
+        } else {
+            console.error("Hub rejected inquiry:", res.status);
         }
+    } catch (err) {
+        console.error("Submission failed:", err);
     }
+}
 }
 customElements.define('inquiry-block', InquiryBlock);
