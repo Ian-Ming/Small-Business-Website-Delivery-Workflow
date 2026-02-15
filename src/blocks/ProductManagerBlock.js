@@ -34,26 +34,28 @@ class ProductManagerBlock extends HTMLElement {
 
     async saveNewProduct(e) {
     e.preventDefault();
-    const form = e.target; // Capture the form immediately
+    const form = e.target;
     const fd = new FormData(form);
     
     const product = {
+        // THIS IS THE FIX: Tell Azure exactly which "drawer" to put this in
+        PartitionKey: this.clientId, 
+        RowKey: Date.now().toString(), // Unique ID for the product
         name: fd.get('name'),
         price: fd.get('price'),
-        description: fd.get('desc') || "",
-        image: fd.get('img') || "https://via.placeholder.com/150"
+        image: fd.get('img') || "https://picsum.photos/300/200"
     };
 
     try {
         const res = await fetch(this.apiUrl, {
             method: 'POST',
             headers: this.getHeaders(),
-            body: JSON.stringify(product)
+            body: JSON.stringify(product) // Send the PartitionKey to the Hub
         });
-
+        
         if (res.ok) {
-            form.reset(); // Use the captured 'form' variable
-            await this.loadProducts(); // This makes it "auto-refresh"
+            form.reset();
+            await this.loadProducts();
         }
     } catch (err) {
         console.error("Save Failed:", err);
@@ -73,19 +75,27 @@ class ProductManagerBlock extends HTMLElement {
         }
     }
 
-    async deleteProduct(pk, rk) {
-        if (!confirm("Permanently delete this product?")) return;
-        try {
-            await fetch(this.apiUrl, {
-                method: 'DELETE',
-                headers: this.getHeaders(),
-                body: JSON.stringify({ pk, rk })
-            });
-            await this.loadProducts();
-        } catch (err) {
-            console.error("Delete Failed:", err);
+    async deleteProduct(rk) { // We only need the RowKey (rk) now
+    if (!confirm("Are you sure you want to delete this item?")) return;
+
+    try {
+        const res = await fetch(this.apiUrl, {
+            method: 'DELETE',
+            headers: this.getHeaders(),
+            // We only send the RowKey. The Hub uses the Header to find the Partition.
+            body: JSON.stringify({ rk: rk }) 
+        });
+
+        if (res.ok) {
+            console.log("Infrastructure: Item removed from registry.");
+            await this.loadProducts(); // Auto-refresh the list
+        } else {
+            console.error("Delete failed on Hub");
         }
+    } catch (err) {
+        console.error("Network Error during delete:", err);
     }
+}
 
     render() {
         this.shadowRoot.innerHTML = `
