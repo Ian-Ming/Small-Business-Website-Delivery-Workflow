@@ -3,12 +3,10 @@ class ProductManagerBlock extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
         this.products = [];
-        // THE MASTER KEY: Change this one line when deploying for a new client
         this.clientId = "BarberShop01"; 
         this.apiUrl = "https://engine01-hub.azurewebsites.net/api/products";
     }
 
-    // Helper to keep fetch calls clean and standardized
     getHeaders(extraHeaders = {}) {
         return {
             'Content-Type': 'application/json',
@@ -24,10 +22,10 @@ class ProductManagerBlock extends HTMLElement {
 
     async loadProducts() {
         try {
-            const res = await fetch(this.apiUrl, {
-                headers: this.getHeaders()
-            });
-            this.products = await res.json();
+            const res = await fetch(this.apiUrl, { headers: this.getHeaders() });
+            const data = await res.json();
+            // Ensure data is an array before setting
+            this.products = Array.isArray(data) ? data : [];
             this.render();
         } catch (err) {
             console.error("Hub Sync Error:", err);
@@ -64,15 +62,14 @@ class ProductManagerBlock extends HTMLElement {
                 headers: this.getHeaders(),
                 body: JSON.stringify({ pk, rk, price: newPrice })
             });
-            console.log(`Infrastructure: Price Updated for ${rk} under ${this.clientId}`);
+            console.log(`Infrastructure: Price Updated for ${rk}`);
         } catch (err) {
             console.error("Update Failed:", err);
         }
     }
 
     async deleteProduct(pk, rk) {
-        if (!confirm("Permanently delete this product from inventory?")) return;
-        
+        if (!confirm("Permanently delete this product?")) return;
         try {
             await fetch(this.apiUrl, {
                 method: 'DELETE',
@@ -86,7 +83,6 @@ class ProductManagerBlock extends HTMLElement {
     }
 
     render() {
-        // ... (Styles stay exactly the same as your previous version) ...
         this.shadowRoot.innerHTML = `
         <style>
             :host { display: block; font-family: 'Segoe UI', system-ui, sans-serif; color: #333; }
@@ -115,18 +111,26 @@ class ProductManagerBlock extends HTMLElement {
             </form>
 
             <div class="product-list">
-                ${this.products.map(p => `
-                    <div class="product-row">
-                        <img src="${p.ImageURL || p.image || 'https://via.placeholder.com/50'}">
-                        <div class="name-tag">${p.Name || p.name}</div>
-                        <div>
-                            $ <input type="number" step="0.01" value="${p.Price || p.price}" 
-                                onchange="this.getRootNode().host.updatePrice('${p.PartitionKey}', '${p.RowKey}', this.value)" 
-                                style="width: 70px; padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
+                ${this.products.length === 0 ? '<p style="text-align:center; color:#999;">No products found.</p>' : ''}
+                ${this.products.map(p => {
+                    const name = p.Name || p.name || "Unnamed Product";
+                    const price = p.Price || p.price || 0;
+                    const img = p.ImageURL || p.image || 'https://via.placeholder.com/50';
+                    const pk = p.PartitionKey || p.pk;
+                    const rk = p.RowKey || p.rk;
+                    return `
+                        <div class="product-row">
+                            <img src="${img}">
+                            <div class="name-tag">${name}</div>
+                            <div>
+                                $ <input type="number" step="0.01" value="${price}" 
+                                    onchange="this.getRootNode().host.updatePrice('${pk}', '${rk}', this.value)" 
+                                    style="width: 70px; padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
+                            </div>
+                            <button class="btn-delete" onclick="this.getRootNode().host.deleteProduct('${pk}', '${rk}')">🗑</button>
                         </div>
-                        <button class="btn-delete" onclick="this.getRootNode().host.deleteProduct('${p.PartitionKey}', '${p.RowKey}')">🗑</button>
-                    </div>
-                `).join('')}
+                    `;
+                }).join('')}
             </div>
         </div>
         `;

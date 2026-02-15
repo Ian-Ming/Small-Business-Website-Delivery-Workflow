@@ -34,12 +34,12 @@ class AuthControlBlock extends HTMLElement {
         </style>
         <div class="auth-wrapper">
             ${this.user ? `
-            <a href="/admin.html" class="auth-link admin-btn">Manage Website</a>
-            <span class="user-info">Hi, <strong>${this.user.userDetails}</strong></span>
-            <a href="/.auth/logout?post_logout_redirect_uri=/" class="auth-link logout">Sign Out</a>
-        ` : `
-                <a href="/.auth/login/aad?post_login_redirect_uri=/admin.html">Client Login</a>
-        `}
+                <a href="/" class="auth-link">← View Live Site</a>
+                <span class="user-info">Logged in: ${this.user.userDetails}</span>
+                <a href="/.auth/logout?post_logout_redirect_uri=/" class="auth-link logout">Sign Out</a>
+            ` : `
+                <a href="/.auth/login/aad?post_login_redirect_uri=/admin.html" class="auth-link login">Client Login</a>
+         `}
         </div>
         `;
     }
