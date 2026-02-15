@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Engine01 | Clothes Shop Template</title>
+    
+    <style>
+        :root {
+            --primary-color: #1a1a1a; /* Sharp Black */
+            --accent-color: #d4af37;  /* Gold Accent */
+            --bg-light: #f9f9f9;
+            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --border-radius: 4px; /* Sharper edges for a barber shop */
+        }
+
+        body { 
+            font-family: var(--font-main); 
+            margin: 0; 
+            color: var(--primary-color);
+            line-height: 1.6;
+        }
+
+        header { 
+            background: var(--primary-color); 
+            color: white; 
+            padding: 60px 20px; 
+            text-align: center; 
+        }
+
+        section { padding: 40px 20px; max-width: 1000px; margin: 0 auto; }
+        .alt-bg { background: var(--bg-light); }
+        h2 { text-align: center; border-bottom: 2px solid var(--accent-color); display: inline-block; margin-bottom: 30px; }
+        .center-heading { text-align: center; }
+    </style>
+
+    <script src="../blocks/ProductBlock.js" defer></script>
+    <script src="../blocks/SchedulingBlock.js" defer></script>
+    <script src="../blocks/ReviewBlock.js" defer></script>
+    <script src="../blocks/InquiryBlock.js" defer></script>
+    <script src="../blocks/CartIconBlock.js" defer></script>
+    <script src="../blocks/AuthControlBlock.js" defer></script>
+</head>
+<body>
+
+    <header>
+    <div class="logo">Engine01 | Clothes Shop</div>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/shop.html">Services</a>
+    </nav>
+</header>
+
+    <section id="services">
+        <div class="center-heading"><h2>Our Services</h2></div>
+        <product-block client-id="NewClient01"></product-block>
+    </section>
+
+    <section id="booking" class="alt-bg">
+        <div class="center-heading"><h2>Buy Clothes</h2></div>
+        <div style="display: flex; justify-content: center;">
+            <scheduling-block></scheduling-block>
+        </div>
+    </section>
+
+    <section id="reviews">
+        <div class="center-heading"><h2>Wall of Fame</h2></div>
+        <review-block></review-block>
+    </section>
+
+    <section id="contact" class="alt-bg">
+        <div class="center-heading"><h2>Custom Inquiries</h2></div>
+        <inquiry-block></inquiry-block>
+    </section>
+
+    <style>
+    .footer-admin {
+        padding: 40px 20px;
+        text-align: center;
+        background: #fafafa;
+        color: #888;
+        font-size: 0.8rem;
+    }
+    .footer-admin a { color: #ccc; text-decoration: none; transition: 0.3s; }
+    .footer-admin a:hover { color: #0078d4; }
+</style>
+
+<div class="footer-admin">
+    <p>&copy; 2026 Engine01 Infrastructure</p>
+    <a href="/admin.html">Staff Login</a>
+</div>
+
+</body>
+</html>
