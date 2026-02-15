@@ -48,7 +48,6 @@
     <nav>
         <a href="/">Home</a>
         <a href="/shop.html">Services</a>
-        <auth-control-block></auth-control-block>
     </nav>
 </header>
 
@@ -74,9 +73,22 @@
         <inquiry-block></inquiry-block>
     </section>
 
-    <footer style="text-align: center; padding: 20px; font-size: 0.8rem; color: #888;">
-        &copy; 2026 Small Business Delivery Workflow | Powered by Azure Engine01
-    </footer>
+    <style>
+    .footer-admin {
+        padding: 40px 20px;
+        text-align: center;
+        background: #fafafa;
+        color: #888;
+        font-size: 0.8rem;
+    }
+    .footer-admin a { color: #ccc; text-decoration: none; transition: 0.3s; }
+    .footer-admin a:hover { color: #0078d4; }
+</style>
+
+<div class="footer-admin">
+    <p>&copy; 2026 Engine01 Infrastructure</p>
+    <a href="/admin.html">Staff Login</a>
+</div>
 
 </body>
 </html>
