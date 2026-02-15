@@ -99,9 +99,16 @@ class ProductManagerBlock extends HTMLElement {
 
         <div class="manager-card">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h3>Inventory Manager</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
+                    <h3>Inventory Manager</h3>
+             <div style="display:flex; gap:10px; align-items:center;">
+        <button onclick="this.getRootNode().host.loadProducts()" 
+                style="background:#f0f0f0; color:#444; padding:5px 10px; font-size:12px;">
+            🔄 Refresh
+                    </button>
                 <span style="font-size:10px; color:#aaa;">ID: ${this.clientId}</span>
             </div>
+        </div>
             
             <form class="add-form" id="productForm">
                 <input name="name" placeholder="Name" required>
@@ -109,6 +116,7 @@ class ProductManagerBlock extends HTMLElement {
                 <input name="img" placeholder="Image URL">
                 <button type="submit">Add Product</button>
             </form>
+            
 
             <div class="product-list">
                 ${this.products.length === 0 ? '<p style="text-align:center; color:#999;">No products found.</p>' : ''}
