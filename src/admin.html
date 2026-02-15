@@ -14,13 +14,18 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>Engine01 Command Center</h1>
-            <p>Managing: <strong>Classic Cuts Barber Shop</strong></p>
-        </div>
-        
-        <Dashboard-block></Dashboard-block>
+    <header>
+        <auth-control-block></auth-control-block>
+        <h1>Engine01 Command Center</h1>
+    </header>
+
+    <section class="dashboard-pill">
+        <dashboard-block></dashboard-block>
+    </section>
+
+    <section class="dashboard-pill" style="margin-top: 30px;">
         <product-manager></product-manager>
-    </div>
+    </section>
+</div>
 </body>
 </html>

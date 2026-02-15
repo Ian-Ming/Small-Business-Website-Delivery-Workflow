@@ -3,21 +3,16 @@ class AuthControlBlock extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
         this.user = null;
-        this.loading = true; // Added loading state
+        this.loading = true;
     }
 
     async connectedCallback() {
         try {
             const res = await fetch('/.auth/me');
-            if (!res.ok) throw new Error('Auth fetch failed');
-            
             const data = await res.json();
-            // Azure returns { clientPrincipal: null } if not logged in
             this.user = data.clientPrincipal || null;
-            console.log("Infrastructure: Auth Check Complete", this.user);
         } catch (err) {
-            console.error("Infrastructure: Auth Service Unavailable", err);
-            this.user = null;
+            console.error("Auth Error:", err);
         } finally {
             this.loading = false;
             this.render();
@@ -25,61 +20,82 @@ class AuthControlBlock extends HTMLElement {
     }
 
     render() {
-        if (this.loading) {
-            this.shadowRoot.innerHTML = `<style>:host { font-family: system-ui; font-size: 0.85rem; color: #888; }</style><span>Verifying Session...</span>`;
-            return;
-        }
-
         this.shadowRoot.innerHTML = `
         <style>
-            :host { display: block; font-family: system-ui, -apple-system, sans-serif; }
-            .auth-wrapper { 
-                display: flex; 
-                align-items: center; 
+            :host { display: block; margin-bottom: 24px; }
+            .nav-container {
+                display: flex;
                 justify-content: space-between;
-                gap: 12px; 
-                font-size: 0.85rem; 
-                background: #f4f4f4;
-                padding: 10px 20px;
+                align-items: center;
+                background: #ffffff;
+                padding: 12px 20px;
+                border-radius: 14px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+                border: 1px solid #eee;
+            }
+            .nav-group { display: flex; align-items: center; gap: 15px; }
+            
+            /* The "Back to Live Site" Button */
+            .back-btn {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                text-decoration: none;
+                color: #555;
+                font-size: 0.85rem;
+                font-weight: 600;
+                padding: 8px 14px;
+                background: #f8f9fa;
                 border-radius: 8px;
-                border: 1px solid #ddd;
+                transition: 0.2s;
             }
-            .user-info { color: #333; font-weight: 500; }
-            .auth-link { 
-                text-decoration: none; 
-                padding: 6px 14px; 
-                border-radius: 6px; 
-                font-weight: 600; 
-                transition: all 0.2s ease;
+            .back-btn:hover { background: #e9ecef; color: #000; }
+            
+            .status-tag {
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                padding: 4px 8px;
+                background: #e1f5fe;
+                color: #01579b;
+                border-radius: 4px;
+                font-weight: 700;
             }
-            .view-site { color: #555; border: 1px solid #ccc; background: white; }
-            .view-site:hover { background: #eee; }
-            .login { background: #0078d4; color: white; border: 1px solid #0078d4; }
-            .login:hover { background: #005a9e; }
-            .logout { color: #dc2626; border: 1px solid transparent; }
-            .logout:hover { border-color: #fecaca; background: #fef2f2; }
+            
+            .user-email { font-size: 0.8rem; color: #888; font-weight: 400; }
+            .logout-link {
+                text-decoration: none;
+                font-size: 0.8rem;
+                color: #dc2626;
+                font-weight: 600;
+            }
             
             @media (max-width: 600px) {
-                .auth-wrapper { flex-direction: column; text-align: center; }
+                .user-email { display: none; } /* Hide email on small phones to save space */
             }
         </style>
-        <div class="auth-wrapper">
-            ${this.user ? `
-                <div style="display:flex; gap:15px; align-items:center;">
-                    <a href="/" class="auth-link view-site">← View Live Site</a>
-                    <span class="user-info">Logged in: <strong>${this.user.userDetails}</strong></span>
-                </div>
-                <a href="/.auth/logout?post_logout_redirect_uri=/" class="auth-link logout">Sign Out</a>
-            ` : `
-                <span>Admin Access Required</span>
-                <a href="/.auth/login/aad?post_login_redirect_uri=/admin.html" class="auth-link login">Client Login</a>
-            `}
+        <div class="nav-container">
+            <div class="nav-group">
+                <a href="/" class="back-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                    Live Site
+                </a>
+                <span class="status-tag">Admin Console</span>
+            </div>
+
+            <div class="nav-group">
+                ${this.user ? `
+                    <span class="user-email">${this.user.userDetails}</span>
+                    <a href="/.auth/logout?post_logout_redirect_uri=/" class="logout-link">Sign Out</a>
+                ` : `
+                    <a href="/.auth/login/aad?post_login_redirect_uri=/admin.html" style="color:#0078d4; text-decoration:none; font-weight:600;">Sign In</a>
+                `}
+            </div>
         </div>
         `;
     }
 }
 
-// Prevents error if the script is loaded multiple times
 if (!customElements.get('auth-control-block')) {
     customElements.define('auth-control-block', AuthControlBlock);
 }

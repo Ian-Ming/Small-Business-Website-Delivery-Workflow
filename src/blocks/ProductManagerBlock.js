@@ -85,17 +85,58 @@ class ProductManagerBlock extends HTMLElement {
     render() {
         this.shadowRoot.innerHTML = `
         <style>
-            :host { display: block; font-family: 'Segoe UI', system-ui, sans-serif; color: #333; }
-            .manager-card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #eee; }
-            h3 { margin-top: 0; color: #111; font-weight: 600; }
-            .add-form { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; margin-bottom: 30px; padding: 20px; background: #f9f9f9; border-radius: 12px; }
-            input { padding: 12px; border: 1px solid #ddd; border-radius: 8px; outline: none; font-size: 14px; }
-            button { background: #0078d4; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
-            .product-row { display: flex; align-items: center; gap: 15px; padding: 12px; border-bottom: 1px solid #eee; }
-            .product-row img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; }
-            .name-tag { flex: 1; font-weight: 500; }
-            .btn-delete { background: #fee2e2; color: #dc2626; padding: 8px 12px; border-radius: 8px; border:none; cursor:pointer; }
-        </style>
+    :host { 
+        display: block; 
+        width: 100%; 
+        box-sizing: border-box;
+        font-family: 'Segoe UI', system-ui, sans-serif; 
+    }
+    .manager-card { 
+        background: white; 
+        border-radius: 16px; 
+        padding: 24px; 
+        border: 1px solid #eee; 
+        /* Ensure it doesn't push out */
+        max-width: 100%;
+        overflow: hidden; 
+    }
+    /* Make the form responsive */
+    .add-form { 
+        display: flex; 
+        flex-wrap: wrap; 
+        gap: 12px; 
+        margin-bottom: 20px; 
+        padding: 15px; 
+        background: #f9f9f9; 
+        border-radius: 12px; 
+    }
+    .add-form input { 
+        flex: 1; 
+        min-width: 120px; 
+        padding: 10px; 
+        border: 1px solid #ddd; 
+        border-radius: 8px; 
+    }
+    .product-list { 
+        display: flex; 
+        flex-direction: column; 
+        gap: 10px; 
+    }
+    .product-row { 
+        display: grid; 
+        grid-template-columns: 50px 1fr 100px 40px; 
+        align-items: center; 
+        gap: 15px; 
+        padding: 12px; 
+        background: #fff;
+        border: 1px solid #f0f0f0;
+        border-radius: 10px; 
+    }
+    .product-row img { width: 50px; height: 50px; border-radius: 6px; object-fit: cover; }
+    button.add-btn { background: #0078d4; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+    .btn-delete { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #ffbcbc; transition: 0.2s; }
+    .btn-delete:hover { color: #dc2626; }
+</style>
 
         <div class="manager-card">
             <div style="display:flex; justify-content:space-between; align-items:center;">
