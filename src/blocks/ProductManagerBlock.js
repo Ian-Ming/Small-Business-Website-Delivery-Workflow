@@ -90,71 +90,29 @@ class ProductManagerBlock extends HTMLElement {
     render() {
         this.shadowRoot.innerHTML = `
         <style>
-    :host { 
-        display: block; 
-        width: 100%; 
-        box-sizing: border-box;
-        font-family: 'Segoe UI', system-ui, sans-serif; 
-    }
-    .manager-card { 
-        background: white; 
-        border-radius: 16px; 
-        padding: 24px; 
-        border: 1px solid #eee; 
-        /* Ensure it doesn't push out */
-        max-width: 100%;
-        overflow: hidden; 
-    }
-    /* Make the form responsive */
-    .add-form { 
-        display: flex; 
-        flex-wrap: wrap; 
-        gap: 12px; 
-        margin-bottom: 20px; 
-        padding: 15px; 
-        background: #f9f9f9; 
-        border-radius: 12px; 
-    }
-    .add-form input { 
-        flex: 1; 
-        min-width: 120px; 
-        padding: 10px; 
-        border: 1px solid #ddd; 
-        border-radius: 8px; 
-    }
-    .product-list { 
-        display: flex; 
-        flex-direction: column; 
-        gap: 10px; 
-    }
-    .product-row { 
-        display: grid; 
-        grid-template-columns: 50px 1fr 100px 40px; 
-        align-items: center; 
-        gap: 15px; 
-        padding: 12px; 
-        background: #fff;
-        border: 1px solid #f0f0f0;
-        border-radius: 10px; 
-    }
-    .product-row img { width: 50px; height: 50px; border-radius: 6px; object-fit: cover; }
-    button.add-btn { background: #0078d4; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
-    .btn-delete { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #ffbcbc; transition: 0.2s; }
-    .btn-delete:hover { color: #dc2626; }
-</style>
+            :host { display: block; width: 100%; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+            .manager-card { background: white; border-radius: 16px; padding: 24px; border: 1px solid #eee; max-width: 100%; overflow: hidden; }
+            .add-form { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 12px; }
+            .add-form input { flex: 1; min-width: 120px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+            .product-list { display: flex; flex-direction: column; gap: 10px; }
+            .product-row { display: grid; grid-template-columns: 50px 1fr 100px 40px; align-items: center; gap: 15px; padding: 12px; background: #fff; border: 1px solid #f0f0f0; border-radius: 10px; }
+            .product-row img { width: 50px; height: 50px; border-radius: 6px; object-fit: cover; }
+            button[type="submit"] { background: #0078d4; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+            .btn-delete { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #ffbcbc; transition: 0.2s; }
+            .btn-delete:hover { color: #dc2626; }
+        </style>
 
         <div class="manager-card">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
-                    <h3>Inventory Manager</h3>
-             <div style="display:flex; gap:10px; align-items:center;">
-        <button onclick="this.getRootNode().host.loadProducts()" 
-                style="background:#f0f0f0; color:#444; padding:5px 10px; font-size:12px;">
-            🔄 Refresh
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                <h3 style="margin:0;">Inventory Manager</h3>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <button onclick="this.getRootNode().host.loadProducts()" 
+                            style="background:#f0f0f0; color:#444; padding:5px 10px; border-radius:6px; border:1px solid #ddd; cursor:pointer; font-size:12px;">
+                        🔄 Refresh
                     </button>
-                <span style="font-size:10px; color:#aaa;">ID: ${this.clientId}</span>
+                    <span style="font-size:10px; color:#aaa;">ID: ${this.clientId}</span>
+                </div>
             </div>
-        </div>
             
             <form class="add-form" id="productForm">
                 <input name="name" placeholder="Name" required>
@@ -162,14 +120,13 @@ class ProductManagerBlock extends HTMLElement {
                 <input name="img" placeholder="Image URL">
                 <button type="submit">Add Product</button>
             </form>
-            
 
             <div class="product-list">
                 ${this.products.length === 0 ? '<p style="text-align:center; color:#999;">No products found.</p>' : ''}
                 ${this.products.map(p => {
                     const name = p.Name || p.name || "Unnamed Product";
                     const price = p.Price || p.price || 0;
-                    const img = p.ImageURL || p.image || 'https://picsum.photos/200/300';
+                    const img = p.ImageURL || p.image || 'https://picsum.photos/50';
                     const pk = p.PartitionKey || p.pk;
                     const rk = p.RowKey || p.rk;
                     return `

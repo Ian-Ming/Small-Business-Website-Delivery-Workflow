@@ -1,46 +1,55 @@
 class ProductBlock extends HTMLElement {
+    static get observedAttributes() { return ['client-id']; }
+
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
-        // Default to attribute or fallback
-        this.clientId = this.getAttribute('client-id') || "BarberShop01"; 
+        this.products = [];
         this.apiUrl = "https://engine01-hub.azurewebsites.net/api/products";
     }
 
+    // This ensures if you change the ID in HTML, the products refresh automatically
+    attributeChangedCallback(name, oldVal, newVal) {
+        if (name === 'client-id' && oldVal !== newVal) {
+            this.loadProducts();
+        }
+    }
+
+    get clientId() {
+        return this.getAttribute('client-id') || "BarberShop01";
+    }
+
     async connectedCallback() {
+        // Ensure we always have a display block so it's not 0px tall
         this.style.display = 'block'; 
-        this.renderLoading();
         await this.loadProducts();
     }
 
     async loadProducts() {
+        this.renderLoading();
         try {
-            // CRITICAL: We pass the client-id so the Hub only returns THAT client's products
             const res = await fetch(this.apiUrl, {
+                method: 'GET',
                 headers: {
                     'x-engine01-client-id': this.clientId,
                     'Content-Type': 'application/json'
                 }
             });
 
-            if (!res.ok) throw new Error(`Server responded with ${res.status}`);
+            if (!res.ok) throw new Error(`Hub Offline (${res.status})`);
             
             const data = await res.json();
-            const productList = Array.isArray(data) ? data : [];
             
-            // Filter locally just in case the Hub is wide open
-            const filtered = productList.filter(p => 
-                (p.PartitionKey === this.clientId) || (p.pk === this.clientId)
-            );
+            // Critical Fix: Filter by the clientId to ensure no data-leakage
+            // Handles both 'pk' and 'PartitionKey' formats from your Azure Hub
+            this.products = Array.isArray(data) ? data.filter(p => 
+                (p.PartitionKey === this.clientId || p.pk === this.clientId)
+            ) : [];
 
-            this.render(filtered);
+            this.render();
         } catch (err) {
             console.error("Infrastructure Sync Error:", err);
-            this.shadowRoot.innerHTML = `
-                <div style="padding:20px; text-align:center; color:#666; border:1px dashed #ccc; border-radius:12px;">
-                    <p>Unable to load products right now.</p>
-                    <button onclick="this.getRootNode().host.loadProducts()" style="cursor:pointer; background:none; border:1px solid #ccc; padding:5px 10px; border-radius:4px;">Try Again</button>
-                </div>`;
+            this.renderError(err.message);
         }
     }
 
@@ -49,109 +58,91 @@ class ProductBlock extends HTMLElement {
         try {
             await fetch(LEADS_API, {
                 method: 'POST',
-                mode: 'cors', // Ensure CORS is handled
                 headers: { 
                     'Content-Type': 'application/json',
                     'x-engine01-client-id': this.clientId 
                 },
                 body: JSON.stringify({
                     PartitionKey: this.clientId, 
-                    RowKey: `LEAD-${Date.now()}`,
+                    RowKey: `CART-${Date.now()}`,
                     Name: "Website Visitor", 
-                    Email: "anonymous@guest.com",
-                    Message: `Intent: Purchase ${product.name} ($${product.price})`
+                    Message: `Product Added: ${product.name} ($${product.price})`
                 })
             });
-        } catch (err) {
-            console.warn("Lead tracking silent failure");
-        }
+        } catch (err) { console.warn("Silent Lead Failure"); }
     }
 
     renderLoading() {
         this.shadowRoot.innerHTML = `
             <style>
-                .loader { padding: 40px; text-align: center; color: #888; font-style: italic; }
-                .shimmer { height: 200px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shim 1.5s infinite; border-radius: 8px; }
-                @keyframes shim { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+                :host { display: block; font-family: sans-serif; }
+                .loading { padding: 50px; text-align: center; color: #aaa; }
+                .shimmer { height: 200px; background: #f0f0f0; border-radius: 12px; animation: pulse 1.5s infinite; }
+                @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
             </style>
-            <div class="loader">
+            <div class="loading">
                 <div class="shimmer"></div>
-                <p>Syncing with Inventory Hub...</p>
-            </div>
-        `;
+                <p>Syncing Inventory...</p>
+            </div>`;
+    }
+
+    renderError(msg) {
+        this.shadowRoot.innerHTML = `
+            <div style="padding:40px; text-align:center; color:#666; border:1px dashed #ddd; border-radius:12px;">
+                <p>Connection issue: ${msg}</p>
+                <button onclick="this.getRootNode().host.loadProducts()" style="padding:8px 16px; cursor:pointer;">Retry</button>
+            </div>`;
     }
 
     _normalize(p) {
         return {
             name: p.Name || p.name || 'Service',
             price: p.Price || p.price || '0.00',
-            img: p.ImageURL || p.image || 'https://via.placeholder.com/150',
-            id: p.RowKey || p.rk || Math.random().toString(36).substr(2, 9)
+            img: p.ImageURL || p.image || 'https://picsum.photos/400/300',
+            id: p.RowKey || p.rk || Math.random()
         };
     }
 
-    render(products) {
-        if (products.length === 0) {
-            this.shadowRoot.innerHTML = `<p style="text-align:center; padding:40px; color:#999;">No products available at this time.</p>`;
+    render() {
+        if (this.products.length === 0) {
+            this.shadowRoot.innerHTML = `<p style="text-align:center; padding:40px; color:#999;">No products available for ${this.clientId}.</p>`;
             return;
         }
 
         this.shadowRoot.innerHTML = `
         <style>
-            :host { display: block; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-            .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; padding: 10px; }
-            .card { border: 1px solid #efefef; border-radius: 12px; padding: 16px; background: #fff; display: flex; flex-direction: column; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-            .card:hover { box-shadow: 0 12px 24px rgba(0,0,0,0.1); transform: translateY(-5px); }
-            img { width: 100%; height: 180px; object-fit: cover; border-radius: 6px; margin-bottom: 12px; }
-            .info { flex-grow: 1; }
-            h3 { margin: 0; font-size: 1rem; color: #1a1a1a; }
-            .price { font-size: 1.2rem; font-weight: 800; color: #1a1a1a; margin: 10px 0; }
-            .add-btn { width: 100%; background: #000; color: #fff; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; }
-            .add-btn:active { transform: scale(0.95); }
+            .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; padding: 20px; }
+            .card { border: 1px solid #eee; border-radius: 16px; padding: 16px; background: #fff; display: flex; flex-direction: column; transition: 0.2s; }
+            .card:hover { box-shadow: 0 10px 20px rgba(0,0,0,0.05); transform: translateY(-3px); }
+            img { width: 100%; height: 200px; object-fit: cover; border-radius: 10px; margin-bottom: 15px; }
+            h3 { margin: 0; font-size: 1.1rem; }
+            .price { font-size: 1.3rem; font-weight: 800; margin: 10px 0; color: #000; }
+            .add-btn { width: 100%; background: #000; color: #fff; border: none; padding: 15px; border-radius: 10px; cursor: pointer; font-weight: 600; margin-top: auto; }
             .added { background: #22c55e !important; }
         </style>
         <div class="grid">
-            ${products.map(raw => {
+            ${this.products.map(raw => {
                 const p = this._normalize(raw);
                 return `
                     <div class="card">
                         <img src="${p.img}" loading="lazy">
-                        <div class="info">
-                            <h3>${p.name}</h3>
-                            <div class="price">$${p.price}</div>
-                        </div>
-                        <button class="add-btn" data-product='${JSON.stringify(p).replace(/'/g, "&apos;")}'>
-                            Add to Bag
-                        </button>
-                    </div>
-                `;
+                        <h3>${p.name}</h3>
+                        <div class="price">$${p.price}</div>
+                        <button class="add-btn" data-p='${JSON.stringify(p).replace(/'/g, "&apos;")}'>Add to Bag</button>
+                    </div>`;
             }).join('')}
         </div>`;
 
         this.shadowRoot.querySelectorAll('.add-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                const product = JSON.parse(btn.dataset.product);
-                
-                // Track in Cloud
-                this.logDraftOrder(product);
-
-                // Local State
+                const p = JSON.parse(btn.dataset.p);
+                this.logDraftOrder(p);
                 btn.classList.add('added');
                 btn.innerText = '✓ Added';
-                
-                this.dispatchEvent(new CustomEvent('engine01_add_to_cart', {
-                    bubbles: true, composed: true, detail: product
-                }));
-
-                setTimeout(() => {
-                    btn.classList.remove('added');
-                    btn.innerText = 'Add to Bag';
-                }, 2000);
+                this.dispatchEvent(new CustomEvent('engine01_cart_add', { bubbles: true, composed: true, detail: p }));
+                setTimeout(() => { btn.classList.remove('added'); btn.innerText = 'Add to Bag'; }, 2000);
             });
         });
     }
 }
-
-if (!customElements.get('product-block')) {
-    customElements.define('product-block', ProductBlock);
-}
+if (!customElements.get('product-block')) customElements.define('product-block', ProductBlock);
