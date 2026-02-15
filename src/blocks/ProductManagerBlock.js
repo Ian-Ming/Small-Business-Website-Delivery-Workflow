@@ -33,27 +33,32 @@ class ProductManagerBlock extends HTMLElement {
     }
 
     async saveNewProduct(e) {
-        e.preventDefault();
-        const fd = new FormData(e.target);
-        const product = {
-            name: fd.get('name'),
-            price: fd.get('price'),
-            description: fd.get('desc') || "",
-            image: fd.get('img') || "https://via.placeholder.com/150"
-        };
+    e.preventDefault();
+    const form = e.target; // Capture the form immediately
+    const fd = new FormData(form);
+    
+    const product = {
+        name: fd.get('name'),
+        price: fd.get('price'),
+        description: fd.get('desc') || "",
+        image: fd.get('img') || "https://via.placeholder.com/150"
+    };
 
-        try {
-            await fetch(this.apiUrl, {
-                method: 'POST',
-                headers: this.getHeaders(),
-                body: JSON.stringify(product)
-            });
-            e.target.reset();
-            await this.loadProducts();
-        } catch (err) {
-            console.error("Save Failed:", err);
+    try {
+        const res = await fetch(this.apiUrl, {
+            method: 'POST',
+            headers: this.getHeaders(),
+            body: JSON.stringify(product)
+        });
+
+        if (res.ok) {
+            form.reset(); // Use the captured 'form' variable
+            await this.loadProducts(); // This makes it "auto-refresh"
         }
+    } catch (err) {
+        console.error("Save Failed:", err);
     }
+}
 
     async updatePrice(pk, rk, newPrice) {
         try {
