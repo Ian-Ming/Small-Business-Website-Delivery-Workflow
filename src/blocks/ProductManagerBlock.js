@@ -169,7 +169,7 @@ class ProductManagerBlock extends HTMLElement {
                 ${this.products.map(p => {
                     const name = p.Name || p.name || "Unnamed Product";
                     const price = p.Price || p.price || 0;
-                    const img = p.ImageURL || p.image || 'https://via.placeholder.com/50';
+                    const img = p.ImageURL || p.image || 'https://picsum.photos/200/300';
                     const pk = p.PartitionKey || p.pk;
                     const rk = p.RowKey || p.rk;
                     return `
