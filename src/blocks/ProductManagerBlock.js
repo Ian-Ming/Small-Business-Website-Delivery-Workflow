@@ -134,3 +134,4 @@ class ProductManagerBlock extends HTMLElement {
         this.shadowRoot.getElementById('productForm')?.addEventListener('submit', (e) => this.saveNewProduct(e));
     }
 }
+customElements.define('product-manager', ProductManagerBlock);

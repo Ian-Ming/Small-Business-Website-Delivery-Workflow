@@ -6,19 +6,12 @@ class AuthControlBlock extends HTMLElement {
     }
 
     async connectedCallback() {
-        try {
-            const res = await fetch("/.auth/me");
-            const data = await res.json();
-            // Azure returns an array of client principals
-            if (data.clientPrincipal) {
-                this.user = data.clientPrincipal;
-            }
-            this.render();
-        } catch (err) {
-            console.log("Auth: No active session found.");
-            this.render();
-        }
-    }
+    const res = await fetch('/.auth/me');
+    const data = await res.json();
+    console.log("Auth Data:", data); // Check the browser console (F12) for this!
+    this.user = data.clientPrincipal;
+    this.render();
+}
 
     render() {
         this.shadowRoot.innerHTML = `
