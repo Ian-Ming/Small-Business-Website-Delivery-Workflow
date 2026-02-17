@@ -2,30 +2,37 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Engine01 | Client Command Center</title>
+    
     <style>
-        body { background: #f4f4f4; padding: 40px; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        body { 
+            background: #f0f2f5; 
+            margin: 0; 
+            padding: 20px; 
+            font-family: 'Inter', system-ui, sans-serif; 
+        }
+        .admin-wrapper { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+        }
     </style>
-    <script type="module" src="./blocks/AuthControlBlock.js"></script>
+
+    <script type="module" src="./blocks/MasterAdminBlock.js"></script>
+    
     <script type="module" src="./blocks/DashboardBlock.js"></script>
     <script type="module" src="./blocks/ProductManagerBlock.js"></script>
+    <script type="module" src="./blocks/SettingsBlock.js"></script>
+    
+    <script type="module" src="./blocks/AuthControlBlock.js"></script>
 </head>
 <body>
-    <div class="container">
-    <header>
+
+    <div class="admin-wrapper">
         <auth-control-block></auth-control-block>
-        <h1>Engine01 Command Center</h1>
-    </header>
 
-    <section class="dashboard-pill">
-        <dashboard-block></dashboard-block>
-    </section>
+        <master-admin-block client-id="BarberShop01"></master-admin-block>
+    </div>
 
-    <section class="dashboard-pill" style="margin-top: 30px;">
-        <product-manager></product-manager>
-    </section>
-</div>
 </body>
 </html>
