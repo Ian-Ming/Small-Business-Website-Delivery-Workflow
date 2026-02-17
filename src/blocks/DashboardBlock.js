@@ -70,7 +70,7 @@ class DashboardBlock extends HTMLElement {
         </style>
         <div class="pill">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h2>Lead Command Center</h2>
+                
                 <button onclick="this.getRootNode().host.fetchOrders()" style="cursor:pointer; background:none; border:1px solid #ddd; padding:5px 10px; border-radius:6px; font-size:0.7rem;">Refresh</button>
             </div>
             <table>

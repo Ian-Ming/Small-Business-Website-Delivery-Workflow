@@ -1,45 +1,51 @@
 class SettingsBlock extends HTMLElement {
+    static get observedAttributes() { return ['client-id']; }
+
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
-        this.clientId = this.getAttribute('client-id');
         this.apiUrl = "https://engine01-hub.azurewebsites.net/api/settings";
+        this.days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
     }
 
-    async connectedCallback() {
-        this.render();
-        await this.loadCurrentSettings();
+    get clientId() { return this.getAttribute('client-id'); }
+
+    attributeChangedCallback(name, oldVal, newVal) {
+        if (name === 'client-id' && newVal) this.loadCurrentSettings();
     }
 
-    // 1. FETCH existing settings from the Hub
     async loadCurrentSettings() {
         if (!this.clientId) return;
         try {
-            const res = await fetch(`${this.apiUrl}`, {
+            const res = await fetch(this.apiUrl, {
                 headers: { 'x-engine01-client-id': this.clientId }
             });
             if (res.ok) {
                 const data = await res.json();
                 this.shadowRoot.getElementById('biz-name').value = data.businessName || '';
-                this.shadowRoot.getElementById('biz-times').value = data.availableTimes || '';
+                this.days.forEach(day => {
+                    // Pulling the recurring weekly slots
+                    this.shadowRoot.getElementById(`${day}-times`).value = data[`${day}Times`] || '';
+                });
             }
-        } catch (err) {
-            console.error("Infrastructure Sync Error: Could not load settings.");
-        }
+        } catch (err) { console.error("Load Error:", err); }
     }
 
-    // 2. SAVE updated settings to the Hub
     async handleSave(e) {
         e.preventDefault();
         const btn = e.target.querySelector('button');
-        const originalText = btn.innerText;
-        btn.innerText = "Syncing Infrastructure...";
+        btn.innerText = "Propagating to Live Site...";
         btn.disabled = true;
 
         const payload = {
             businessName: this.shadowRoot.getElementById('biz-name').value,
-            availableTimes: this.shadowRoot.getElementById('biz-times').value
+            // Flagging this as recurring logic
+            scheduleType: 'recurring_weekly' 
         };
+        
+        this.days.forEach(day => {
+            payload[`${day}Times`] = this.shadowRoot.getElementById(`${day}-times`).value;
+        });
 
         try {
             const res = await fetch(this.apiUrl, {
@@ -52,55 +58,50 @@ class SettingsBlock extends HTMLElement {
             });
 
             if (res.ok) {
-                btn.innerText = "✓ System Updated";
-                btn.style.background = "#059669"; // Success Green
+                btn.innerText = "✓ Weekly Schedule Synced";
+                btn.style.background = "#059669";
                 setTimeout(() => {
-                    btn.innerText = originalText;
+                    btn.innerText = "Save Site Settings";
                     btn.style.background = "#000";
                     btn.disabled = false;
                 }, 2000);
             }
         } catch (err) {
-            alert("Connection Error: Hub unreachable.");
+            btn.innerText = "Sync Failed";
             btn.disabled = false;
-            btn.innerText = originalText;
         }
     }
 
     render() {
         this.shadowRoot.innerHTML = `
         <style>
-            :host { display: block; }
-            .settings-container { background: white; padding: 24px; border-radius: 12px; border: 1px solid #eee; }
-            .form-group { margin-bottom: 20px; }
-            label { display: block; font-size: 0.85rem; font-weight: 600; color: #344054; margin-bottom: 8px; }
-            input { width: 100%; padding: 12px; border: 1px solid #d0d5dd; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
-            .help-text { font-size: 0.75rem; color: #667085; margin-top: 6px; }
-            button { 
-                background: #000; color: white; border: none; padding: 12px 24px; 
-                border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s;
-            }
-            button:disabled { opacity: 0.5; cursor: not-allowed; }
+            .container { background: #fff; padding: 20px; border-radius: 12px; }
+            .grid { display: grid; grid-template-columns: 120px 1fr; gap: 10px; align-items: center; margin-bottom: 20px; }
+            label { font-weight: bold; font-size: 0.8rem; text-transform: capitalize; color: #444; }
+            input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; }
+            .header { font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+            button { width: 100%; padding: 15px; background: #000; color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+            .info { font-size: 0.75rem; color: #666; margin-bottom: 20px; padding: 10px; background: #f9f9f9; border-radius: 6px; }
         </style>
-        <div class="settings-container">
+        <div class="container">
+            <div class="header">⚙️ Recurring Weekly Availability</div>
+            <div class="info">Define your standard hours here. These will repeat every week.</div>
+            
             <form id="settings-form">
-                <div class="form-group">
-                    <label>Business Display Name</label>
-                    <input type="text" id="biz-name" placeholder="e.g. The Engine Barber Shop">
-                    <div class="help-text">This name appears on client emails and the booking page.</div>
+                <div class="grid" style="grid-template-columns: 1fr;">
+                    <label>Business Name</label>
+                    <input type="text" id="biz-name" placeholder="Business Name">
                 </div>
-
-                <div class="form-group">
-                    <label>Daily Availability (comma separated)</label>
-                    <input type="text" id="biz-times" placeholder="9:00 AM, 10:00 AM, 11:00 AM, 1:00 PM">
-                    <div class="help-text">Updating this refreshes your live scheduling calendar instantly.</div>
+                
+                <div class="grid">
+                    ${this.days.map(day => `
+                        <label>${day}</label>
+                        <input type="text" id="${day}-times" placeholder="9am, 10am, 11am">
+                    `).join('')}
                 </div>
-
                 <button type="submit">Save Site Settings</button>
             </form>
-        </div>
-        `;
-
+        </div>`;
         this.shadowRoot.getElementById('settings-form').onsubmit = (e) => this.handleSave(e);
     }
 }

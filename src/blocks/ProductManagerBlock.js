@@ -14,6 +14,15 @@ class ProductManagerBlock extends HTMLElement {
             ...extraHeaders
         };
     }
+    // Add this to the TOP of your ProductManagerBlock class
+static get observedAttributes() { return ['client-id']; }
+
+attributeChangedCallback(name, oldVal, newVal) {
+    if (name === 'client-id' && newVal) {
+        this.clientId = newVal;
+        this.loadProducts(); // Refresh data as soon as ID arrives
+    }
+}
 
     async connectedCallback() {
         this.render();
@@ -114,7 +123,6 @@ class ProductManagerBlock extends HTMLElement {
 
         <div class="manager-card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-                <h3 style="margin:0;">Inventory Manager</h3>
                 <div style="display:flex; gap:10px; align-items:center;">
                     <button onclick="this.getRootNode().host.loadProducts()" 
                             style="background:#f0f0f0; color:#444; padding:5px 10px; border-radius:6px; border:1px solid #ddd; cursor:pointer; font-size:12px;">
