@@ -11,6 +11,17 @@ class SchedulingBlock extends HTMLElement {
 
     get clientId() { return this.getAttribute('client-id'); }
 
+    static get observedAttributes() { return ['client-id']; }
+
+attributeChangedCallback(name, oldVal, newVal) {
+    if (name === 'client-id' && newVal) {
+        this.clientId = newVal;
+        // This is the trigger that actually starts the data fetch
+        if(this.loadProducts) this.loadProducts(); 
+        if(this.loadCurrentSettings) this.loadCurrentSettings();
+    }
+}
+
     connectedCallback() {
         this.render();
     }
